@@ -74,6 +74,8 @@ int oplus_dimlayer_bl_enable_v3_real;
 int oplus_dimlayer_bl_enable_v2_real = 0;
 bool oplus_skip_datadimming_sync = false;
 
+int oplus_skip_pcc_override = 0;
+
 extern int oplus_debug_max_brightness;
 int oplus_seed_backlight = 0;
 bool oplus_dc_v2_on = false;
@@ -2399,43 +2401,8 @@ int dsi_display_oplus_set_power(struct drm_connector *connector,
 				}
 			}
 #endif /* OPLUS_FEATURE_ADFR */
-<<<<<<< HEAD
-			if (sde_crtc_get_fingerprint_mode(connector->state->crtc->state)) {
-				mutex_lock(&display->panel->panel_lock);
-				dsi_display_clk_ctrl(display->dsi_clk_handle,
-						     DSI_CORE_CLK, DSI_CLK_ON);
-				if (display->panel->panel_initialized) {
-					if (!strcmp(display->panel->oplus_priv.vendor_name, "S6E3HC3") && (display->panel->panel_id2 >= 5)) {
-						rc = dsi_panel_tx_cmd_set(display->panel, DSI_CMD_AOD_HBM_ON_PVT);
-					} else {
-						rc = dsi_panel_tx_cmd_set(display->panel, DSI_CMD_AOD_HBM_ON);
-
-						if ((display->panel->oplus_priv.is_oplus_project) &&
-							(!strcmp(display->panel->oplus_priv.vendor_name, "AMB655X")) &&
-							(get_oplus_display_scene() == OPLUS_DISPLAY_AOD_HBM_SCENE)) {
-							dsi_panel_tx_cmd_set(display->panel, DSI_CMD_HBM_ON);
-						}
-					}
-					if (!strcmp(display->panel->oplus_priv.vendor_name, "AMB655XL08")) {
-						display->panel->is_hbm_enabled = true;
-					}
-				} else {
-					pr_err("[%s][%d]failed to setting dsi command", __func__, __LINE__);
-				}
-				dsi_display_clk_ctrl(display->dsi_clk_handle,
-						     DSI_CORE_CLK, DSI_CLK_OFF);
-				mutex_unlock(&display->panel->panel_lock);
-				set_oplus_display_scene(OPLUS_DISPLAY_AOD_HBM_SCENE);
-			} else {
-				if (!strcmp(display->panel->oplus_priv.vendor_name, "AMS644VK04")) {
-					display->panel->need_power_on_backlight = true;
-				}
-				rc = dsi_panel_set_nolp(display->panel);
-				set_oplus_display_scene(OPLUS_DISPLAY_NORMAL_SCENE);
-=======
 			if (!strcmp(display->panel->oplus_priv.vendor_name, "AMS644VK04")) {
 				display->panel->need_power_on_backlight = true;
->>>>>>> 0b118537bce3 (techpack: display: Don't skip LP1 cmd for AoD with fingerprint_mode on)
 			}
 			rc = dsi_panel_set_nolp(display->panel);
 			set_oplus_display_scene(OPLUS_DISPLAY_NORMAL_SCENE);
@@ -3674,6 +3641,24 @@ static ssize_t oplus_display_get_fp_state(struct device *obj,
 	return sprintf(buf, "%d,%d,%d\n", fp_state.x, fp_state.y, fp_state.touch_state);
 }
 
+static ssize_t oplus_display_get_oplus_skip_pcc_override(struct device *obj,
+	struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", oplus_skip_pcc_override);
+}
+
+static ssize_t oplus_display_set_oplus_skip_pcc_override(struct device *obj,
+	struct device_attribute *attr, const char *buf, size_t count)
+{
+	int value = 0;
+	sscanf(buf, "%d", &value);
+
+	value = !!value;
+	oplus_skip_pcc_override = value;
+
+	return count;
+}
+
 static struct kobject *oplus_display_kobj;
 
 static DEVICE_ATTR(hbm, S_IRUGO|S_IWUSR, oplus_display_get_hbm, oplus_display_set_hbm);
@@ -3710,6 +3695,7 @@ static DEVICE_ATTR(panel_pwr, S_IRUGO|S_IWUSR, oplus_display_get_panel_pwr, oplu
 static DEVICE_ATTR(mca_state, S_IRUGO|S_IWUSR, oplus_display_get_mca, oplus_display_set_mca);
 static DEVICE_ATTR(failsafe, S_IRUGO|S_IWUSR, NULL, oplus_display_set_failsafe);
 static DEVICE_ATTR(mipi_clk_rate_hz, S_IRUGO|S_IWUSR, oplus_display_get_mipi_clk_rate_hz, NULL);
+static DEVICE_ATTR(skip_pcc_override, S_IRUGO|S_IWUSR, oplus_display_get_oplus_skip_pcc_override, oplus_display_set_oplus_skip_pcc_override);
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 static DEVICE_ATTR(aod_area, S_IRUGO|S_IWUSR, oplus_display_get_aod_area, oplus_display_set_aod_area);
 static DEVICE_ATTR(video, S_IRUGO|S_IWUSR, oplus_display_get_video, oplus_display_set_video);
@@ -3768,6 +3754,7 @@ static struct attribute *oplus_display_attrs[] = {
 	&dev_attr_mca_state.attr,
 	&dev_attr_failsafe.attr,
 	&dev_attr_mipi_clk_rate_hz.attr,
+	&dev_attr_skip_pcc_override.attr,
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 	&dev_attr_aod_area.attr,
 	&dev_attr_video.attr,
