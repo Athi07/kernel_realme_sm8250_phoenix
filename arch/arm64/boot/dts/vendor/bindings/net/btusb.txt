@@ -35,7 +35,11 @@ Following example uses irq pin number 3 of gpio0 for out of band wake-on-bt:
 	compatible = "usb1286,204e";
 	reg = <1>;
 	interrupt-parent = <&gpio0>;
+<<<<<<< HEAD
 	interrupt-names = "wakeup";
+=======
+	interrupt-name = "wakeup";
+>>>>>>> c7b357e106ea (arm64: dts: vendor: Import realme SM8250 project DTS from RealmeUI 4.0)
 	interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
     };
 };
