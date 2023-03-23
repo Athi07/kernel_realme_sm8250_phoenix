@@ -43,6 +43,7 @@ group emmc_nb
 
 group pwm0
  - pin 11 (GPIO1-11)
+<<<<<<< HEAD
  - functions pwm, led, gpio
 
 group pwm1
@@ -63,6 +64,28 @@ group pmic1
 
 group pmic0
  - pin 6
+=======
+ - functions pwm, gpio
+
+group pwm1
+ - pin 12
+ - functions pwm, gpio
+
+group pwm2
+ - pin 13
+ - functions pwm, gpio
+
+group pwm3
+ - pin 14
+ - functions pwm, gpio
+
+group pmic1
+ - pin 17
+ - functions pmic, gpio
+
+group pmic0
+ - pin 16
+>>>>>>> c7b357e106ea (arm64: dts: vendor: Import realme SM8250 project DTS from RealmeUI 4.0)
  - functions pmic, gpio
 
 group i2c2
@@ -112,6 +135,7 @@ group usb2_drvvbus1
  - functions drvbus, gpio
 
 group sdio_sb
+<<<<<<< HEAD
  - pins 60-65
  - functions sdio, gpio
 
@@ -131,6 +155,19 @@ group smi
  - pins 54-55
  - functions smi, gpio
 
+=======
+ - pins 60-64
+ - functions sdio, gpio
+
+group rgmii
+ - pins 42-55
+ - functions mii, gpio
+
+group pcie1
+ - pins 39-40
+ - functions pcie, gpio
+
+>>>>>>> c7b357e106ea (arm64: dts: vendor: Import realme SM8250 project DTS from RealmeUI 4.0)
 group ptp
  - pins 56-58
  - functions ptp, gpio

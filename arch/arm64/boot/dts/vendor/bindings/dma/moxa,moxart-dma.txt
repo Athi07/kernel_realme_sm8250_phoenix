@@ -34,8 +34,13 @@ Example:
 Use specific request line passing from dma
 For example, MMC request line is 5
 
+<<<<<<< HEAD
 	mmc: mmc@98e00000 {
 		compatible = "moxa,moxart-mmc";
+=======
+	sdhci: sdhci@98e00000 {
+		compatible = "moxa,moxart-sdhci";
+>>>>>>> c7b357e106ea (arm64: dts: vendor: Import realme SM8250 project DTS from RealmeUI 4.0)
 		reg = <0x98e00000 0x5C>;
 		interrupts = <5 0>;
 		clocks = <&clk_apb>;
