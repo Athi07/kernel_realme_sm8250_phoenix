@@ -9,7 +9,7 @@
 #include <linux/i2c.h>
 #include <linux/mutex.h>
 #include <linux/soc/qcom/fsa4480-i2c.h>
-#include "dsi/dsi_display.h"
+#include "../../../techpack/display/msm/dsi/dsi_display.h"
 
 #ifdef OPLUS_ARCH_EXTENDS
 #include <linux/of_gpio.h>
