@@ -1496,9 +1496,9 @@ board_temp-usr {
 			};
 
 			modem_trip_pa2_2: modem_trip_pa2_2 {
-				temperature = <55000>;
+				temperature = <60000>;
 				hysteresis = <4000>;
-				type = "critical";
+				type = "hot";
 			};
 		};
 
@@ -1571,9 +1571,9 @@ board_temp-usr {
 			};
 
 			modem_trip2: modem-trip2 {
-				temperature = <55000>;
+				temperature = <60000>;
 				hysteresis = <4000>;
-				type = "critical";
+				type = "hot";
 			};
 		};
 
