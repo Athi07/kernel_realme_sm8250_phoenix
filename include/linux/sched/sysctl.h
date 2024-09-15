@@ -126,6 +126,7 @@ extern int sysctl_sched_rt_runtime;
 #ifdef CONFIG_UCLAMP_TASK
 extern unsigned int sysctl_sched_uclamp_util_min;
 extern unsigned int sysctl_sched_uclamp_util_max;
+extern unsigned int sysctl_sched_uclamp_util_min_rt_default;
 #endif
 
 #ifdef CONFIG_CFS_BANDWIDTH
@@ -175,5 +176,7 @@ extern int sched_energy_aware_handler(struct ctl_table *table, int write,
 extern int sysctl_sched_assist_scene_handler(struct ctl_table *table, int write,
 	void __user *buffer, size_t *lenp, loff_t *ppos);
 #endif /* OPLUS_FEATURE_SCHED_ASSIST */
+
+extern bool is_sched_lib_based_app(pid_t pid);
 
 #endif /* _LINUX_SCHED_SYSCTL_H */
