@@ -3903,7 +3903,7 @@ int oplus_chg_parse_charger_dt(struct oplus_chg_chip *chip)
 	rc = of_property_read_u32(node, "qcom,led_high_bat_decidegc",
 			&chip->limits.led_high_bat_decidegc);
 	if (rc) {
-		chip->limits.led_high_bat_decidegc = 370;
+		chip->limits.led_high_bat_decidegc = 400;
 	}
 
 #ifndef CONFIG_DISABLE_OPLUS_FUNCTION
@@ -3924,7 +3924,7 @@ int oplus_chg_parse_charger_dt(struct oplus_chg_chip *chip)
 	rc = of_property_read_u32(node, "qcom,led_warm_bat_decidegc",
 			&chip->limits.led_warm_bat_decidegc);
 	if (rc) {
-		chip->limits.led_warm_bat_decidegc = 350;
+		chip->limits.led_warm_bat_decidegc = 380;
 	}
 
 #ifndef CONFIG_DISABLE_OPLUS_FUNCTION
@@ -4283,7 +4283,7 @@ int oplus_chg_parse_charger_dt(struct oplus_chg_chip *chip)
 	rc = of_property_read_u32(node, "qcom,temp_normal_vfloat_mv",
 			&chip->limits.temp_normal_vfloat_mv);
 	if (rc < 0) {
-		chip->limits.temp_normal_vfloat_mv = 4320;
+		chip->limits.temp_normal_vfloat_mv = 4435;
 	}
 	rc = of_property_read_u32(node, "qcom,pd_temp_normal_fastchg_current_ma",
 			&chip->limits.pd_temp_normal_fastchg_current_ma);
@@ -4409,7 +4409,7 @@ int oplus_chg_parse_charger_dt(struct oplus_chg_chip *chip)
 	rc = of_property_read_u32(node, "qcom,normal_phase6_bat_decidegc",
 			&chip->limits.normal_phase6_bat_decidegc);
 	if (rc < 0) {
-		chip->limits.normal_phase6_bat_decidegc = 420;
+		chip->limits.normal_phase6_bat_decidegc = 450;
 	}
 
 	rc = of_property_read_u32(node, "qcom,temp_normal_phase6_vfloat_mv",
@@ -13280,12 +13280,12 @@ void oplus_smart_charge_by_cool_down(struct oplus_chg_chip *chip, int val)
 					chip->cool_down_done = true;
 				}
 				if (val & SMART_NORMAL_CHARGER_500MA) {
-					chip->limits.input_current_cool_down_ma =
-					OPLUS_CHG_500_CHARGING_CURRENT;
-					chip->limits.pd_input_current_charger_ma =
-					OPLUS_CHG_500_CHARGING_CURRENT;
-					chip->limits.qc_input_current_charger_ma =
-					OPLUS_CHG_500_CHARGING_CURRENT;
+					chip->limits.input_current_vooc_ma_high =
+					OPLUS_CHG_1500_CHARGING_CURRENT;
+					chip->limits.input_current_vooc_ma_warm =
+					OPLUS_CHG_1500_CHARGING_CURRENT;
+					chip->limits.input_current_vooc_ma_normal =
+					OPLUS_CHG_1500_CHARGING_CURRENT;
 					chip->cool_down_done = true;
 				}
 				if (val & SMART_COMPATIBLE_VOOC_CHARGER_CURRENT_BIT0) {
