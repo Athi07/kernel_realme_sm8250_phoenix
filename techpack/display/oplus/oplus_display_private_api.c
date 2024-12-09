@@ -26,7 +26,7 @@
  */
 #include <linux/notifier.h>
 #include <linux/msm_drm_notify.h>
-#include <soc/oplus/device_info.h>
+#include <soc/oppo/device_info.h>
 #if defined(OPLUS_FEATURE_PXLW_IRIS5)
 #include <video/mipi_display.h>
 #include "iris/dsi_iris5_api.h"
@@ -74,10 +74,6 @@ int oplus_dimlayer_bl_enable_v3_real;
 int oplus_dimlayer_bl_enable_v2_real = 0;
 bool oplus_skip_datadimming_sync = false;
 
-int oplus_skip_pcc_override = 0;
-
-uint64_t serial_number_fir = 0x0;
-
 extern int oplus_debug_max_brightness;
 int oplus_seed_backlight = 0;
 bool oplus_dc_v2_on = false;
@@ -86,7 +82,6 @@ ktime_t oplus_backlight_time;
 u32 oplus_backlight_delta = 0;
 
 extern int oplus_dimlayer_hbm;
-extern int oplus_dimlayer_hbm_saved;
 extern int enable_global_hbm_flags;
 
 /*#ifdef OPLUS_BUG_STABILITY*/
@@ -651,17 +646,6 @@ struct device_attribute *attr, char *buf) {
 	}
 
 	/*
-	 * To fix bug id 5552142, we do not read serial number frequently.
-	 * First read, then return the saved value.
-	 */
-	if (serial_number_fir != 0) {
-		ret = scnprintf(buf, PAGE_SIZE, "Get panel0 serial number: %llx\n",
-						serial_number_fir);
-		pr_info("%s read serial_number_fir 0x%x\n", __func__, serial_number_fir);
-		return ret;
-	}
-
-	/*
 	 * for some unknown reason, the panel_serial_info may read dummy,
 	 * retry when found panel_serial_info is abnormal.
 	 */
@@ -751,8 +735,6 @@ struct device_attribute *attr, char *buf) {
 		}
 
 		ret = scnprintf(buf, PAGE_SIZE, "Get panel serial number: %llx\n",serial_number);
-		/*Save serial_number value.*/
-		serial_number_fir = serial_number;
 		break;
 	}
 
@@ -1752,7 +1734,7 @@ static ssize_t oplus_display_set_dimlayer_enable(struct device *dev,
 static ssize_t oplus_display_get_dimlayer_hbm(struct device *dev,
                                 struct device_attribute *attr, char *buf)
 {
-	return sprintf(buf, "%d\n", oplus_dimlayer_hbm_saved);
+	return sprintf(buf, "%d\n", oplus_dimlayer_hbm);
 }
 
 extern int oplus_dimlayer_hbm_vblank_count;
@@ -1768,28 +1750,24 @@ static ssize_t oplus_display_set_dimlayer_hbm(struct device *dev,
 
 	sscanf(buf, "%d", &value);
 	value = !!value;
-	if (oplus_dimlayer_hbm_saved == value)
+	if (oplus_dimlayer_hbm == value)
 		return count;
-	if (get_oplus_display_power_status() == OPLUS_DISPLAY_POWER_ON) {
-		if (!dsi_connector || !dsi_connector->state || !dsi_connector->state->crtc) {
-			pr_err("[%s]: display not ready\n", __func__);
+	if (!dsi_connector || !dsi_connector->state || !dsi_connector->state->crtc) {
+		pr_err("[%s]: display not ready\n", __func__);
+	} else {
+		err = drm_crtc_vblank_get(dsi_connector->state->crtc);
+		if (err) {
+			pr_err("failed to get crtc vblank, error=%d\n", err);
 		} else {
-			err = drm_crtc_vblank_get(dsi_connector->state->crtc);
-			if (err) {
-				pr_err("failed to get crtc vblank, error=%d\n", err);
-			} else {
-				/* do vblank put after 5 frames */
-				oplus_dimlayer_hbm_vblank_count = 5;
-				atomic_inc(&oplus_dimlayer_hbm_vblank_ref);
-			}
+			/* do vblank put after 5 frames */
+			oplus_dimlayer_hbm_vblank_count = 5;
+			atomic_inc(&oplus_dimlayer_hbm_vblank_ref);
 		}
-		oplus_dimlayer_hbm = value;
 	}
-	oplus_dimlayer_hbm_saved = value;
+	oplus_dimlayer_hbm = value;
 
 #ifdef OPLUS_BUG_STABILITY
-	pr_err("debug for oplus_display_set_dimlayer_hbm set oplus_dimlayer_hbm = %d, oplus_dimlayer_hbm_saved = %d\n",
-		oplus_dimlayer_hbm, oplus_dimlayer_hbm_saved);
+	pr_err("debug for oplus_display_set_dimlayer_hbm set oplus_dimlayer_hbm = %d\n",oplus_dimlayer_hbm);
 #endif
 
 	return count;
@@ -2383,11 +2361,35 @@ int dsi_display_oplus_set_power(struct drm_connector *connector,
 		switch(get_oplus_display_scene()) {
 		case OPLUS_DISPLAY_NORMAL_SCENE:
 		case OPLUS_DISPLAY_NORMAL_HBM_SCENE:
-			oplus_dimlayer_hbm = 0;
-			oplus_dimlayer_vblank(connector->state->crtc);
 			rc = dsi_panel_set_lp1(display->panel);
 			rc = dsi_panel_set_lp2(display->panel);
 			set_oplus_display_scene(OPLUS_DISPLAY_AOD_SCENE);
+			break;
+		case OPLUS_DISPLAY_AOD_HBM_SCENE:
+			/* Skip aod off if fingerprintpress exist */
+			if (!sde_crtc_get_fingerprint_pressed(connector->state->crtc->state)) {
+				mutex_lock(&display->panel->panel_lock);
+				dsi_display_clk_ctrl(display->dsi_clk_handle,
+						     DSI_CORE_CLK, DSI_CLK_ON);
+				if (display->panel->panel_initialized) {
+					if (!strcmp(display->panel->oplus_priv.vendor_name, "S6E3HC3") && (display->panel->panel_id2 >= 5)) {
+						rc = dsi_panel_tx_cmd_set(display->panel, DSI_CMD_AOD_HBM_OFF_PVT);
+					} else {
+						rc = dsi_panel_tx_cmd_set(display->panel, DSI_CMD_AOD_HBM_OFF);
+					}
+					if (!strcmp(display->panel->oplus_priv.vendor_name, "AMB655XL08")) {
+						display->panel->is_hbm_enabled = false;
+					}
+					oplus_update_aod_light_mode_unlock(display->panel);
+				} else {
+					pr_err("[%s][%d]failed to setting dsi command", __func__, __LINE__);
+				}
+				dsi_display_clk_ctrl(display->dsi_clk_handle,
+						     DSI_CORE_CLK, DSI_CLK_OFF);
+				mutex_unlock(&display->panel->panel_lock);
+				set_oplus_display_scene(OPLUS_DISPLAY_AOD_SCENE);
+			}
+
 			break;
 		case OPLUS_DISPLAY_AOD_SCENE:
 		default:
@@ -2416,11 +2418,39 @@ int dsi_display_oplus_set_power(struct drm_connector *connector,
 				}
 			}
 #endif /* OPLUS_FEATURE_ADFR */
-			if (!strcmp(display->panel->oplus_priv.vendor_name, "AMS644VK04")) {
-				display->panel->need_power_on_backlight = true;
+			if (sde_crtc_get_fingerprint_mode(connector->state->crtc->state)) {
+				mutex_lock(&display->panel->panel_lock);
+				dsi_display_clk_ctrl(display->dsi_clk_handle,
+						     DSI_CORE_CLK, DSI_CLK_ON);
+				if (display->panel->panel_initialized) {
+					if (!strcmp(display->panel->oplus_priv.vendor_name, "S6E3HC3") && (display->panel->panel_id2 >= 5)) {
+						rc = dsi_panel_tx_cmd_set(display->panel, DSI_CMD_AOD_HBM_ON_PVT);
+					} else {
+						rc = dsi_panel_tx_cmd_set(display->panel, DSI_CMD_AOD_HBM_ON);
+
+						if ((display->panel->oplus_priv.is_oplus_project) &&
+							(!strcmp(display->panel->oplus_priv.vendor_name, "AMB655X")) &&
+							(get_oplus_display_scene() == OPLUS_DISPLAY_AOD_HBM_SCENE)) {
+							dsi_panel_tx_cmd_set(display->panel, DSI_CMD_HBM_ON);
+						}
+					}
+					if (!strcmp(display->panel->oplus_priv.vendor_name, "AMB655XL08")) {
+						display->panel->is_hbm_enabled = true;
+					}
+				} else {
+					pr_err("[%s][%d]failed to setting dsi command", __func__, __LINE__);
+				}
+				dsi_display_clk_ctrl(display->dsi_clk_handle,
+						     DSI_CORE_CLK, DSI_CLK_OFF);
+				mutex_unlock(&display->panel->panel_lock);
+				set_oplus_display_scene(OPLUS_DISPLAY_AOD_HBM_SCENE);
+			} else {
+				if (!strcmp(display->panel->oplus_priv.vendor_name, "AMS644VK04")) {
+					display->panel->need_power_on_backlight = true;
+				}
+				rc = dsi_panel_set_nolp(display->panel);
+				set_oplus_display_scene(OPLUS_DISPLAY_NORMAL_SCENE);
 			}
-			rc = dsi_panel_set_nolp(display->panel);
-			set_oplus_display_scene(OPLUS_DISPLAY_NORMAL_SCENE);
 		}
 		if (!strcmp(display->panel->oplus_priv.vendor_name, "S6E3HC3")) {
 			if (!sde_crtc_get_fingerprint_mode(connector->state->crtc->state)) {
@@ -2448,13 +2478,6 @@ int dsi_display_oplus_set_power(struct drm_connector *connector,
 		/*  A tablet Pad, add for NT36523 resume touch here */
 		if(strcmp(display->panel->name, "nt36523 lcd vid mode dsi panel"))
 			msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notifier_data);
-
-		if (oplus_dimlayer_hbm != oplus_dimlayer_hbm_saved) {
-			oplus_dimlayer_hbm = oplus_dimlayer_hbm_saved;
-			oplus_dimlayer_vblank(connector->state->crtc);
-		}
-		msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK,
-					    &notifier_data);
 		break;
 	case SDE_MODE_DPMS_OFF:
 	default:
@@ -3656,24 +3679,6 @@ static ssize_t oplus_display_get_fp_state(struct device *obj,
 	return sprintf(buf, "%d,%d,%d\n", fp_state.x, fp_state.y, fp_state.touch_state);
 }
 
-static ssize_t oplus_display_get_oplus_skip_pcc_override(struct device *obj,
-	struct device_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", oplus_skip_pcc_override);
-}
-
-static ssize_t oplus_display_set_oplus_skip_pcc_override(struct device *obj,
-	struct device_attribute *attr, const char *buf, size_t count)
-{
-	int value = 0;
-	sscanf(buf, "%d", &value);
-
-	value = !!value;
-	oplus_skip_pcc_override = value;
-
-	return count;
-}
-
 static struct kobject *oplus_display_kobj;
 
 static DEVICE_ATTR(hbm, S_IRUGO|S_IWUSR, oplus_display_get_hbm, oplus_display_set_hbm);
@@ -3710,7 +3715,6 @@ static DEVICE_ATTR(panel_pwr, S_IRUGO|S_IWUSR, oplus_display_get_panel_pwr, oplu
 static DEVICE_ATTR(mca_state, S_IRUGO|S_IWUSR, oplus_display_get_mca, oplus_display_set_mca);
 static DEVICE_ATTR(failsafe, S_IRUGO|S_IWUSR, NULL, oplus_display_set_failsafe);
 static DEVICE_ATTR(mipi_clk_rate_hz, S_IRUGO|S_IWUSR, oplus_display_get_mipi_clk_rate_hz, NULL);
-static DEVICE_ATTR(skip_pcc_override, S_IRUGO|S_IWUSR, oplus_display_get_oplus_skip_pcc_override, oplus_display_set_oplus_skip_pcc_override);
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 static DEVICE_ATTR(aod_area, S_IRUGO|S_IWUSR, oplus_display_get_aod_area, oplus_display_set_aod_area);
 static DEVICE_ATTR(video, S_IRUGO|S_IWUSR, oplus_display_get_video, oplus_display_set_video);
@@ -3769,7 +3773,6 @@ static struct attribute *oplus_display_attrs[] = {
 	&dev_attr_mca_state.attr,
 	&dev_attr_failsafe.attr,
 	&dev_attr_mipi_clk_rate_hz.attr,
-	&dev_attr_skip_pcc_override.attr,
 #ifdef OPLUS_FEATURE_AOD_RAMLESS
 	&dev_attr_aod_area.attr,
 	&dev_attr_video.attr,
@@ -3871,4 +3874,4 @@ static void __exit oplus_display_private_api_exit(void)
 module_init(oplus_display_private_api_init);
 module_exit(oplus_display_private_api_exit);
 MODULE_LICENSE("GPL v2");
-MODULE_AUTHOR("Hujie");
+MODULE_AUTHOR("Hujie <hujie@oplus.com>");
