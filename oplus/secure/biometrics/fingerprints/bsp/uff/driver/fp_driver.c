@@ -500,6 +500,7 @@ static int fp_open(struct inode *inode, struct file *filp) {
     struct fp_dev *fp_dev = &fp_dev_data;
     int            status = -ENXIO;
     /* reset previous msg incase of reinit in hal*/
+    reset_fingerprint_msg();
     mutex_lock(&device_list_lock);
 
     list_for_each_entry(fp_dev, &device_list, device_entry) {
@@ -532,17 +533,10 @@ static int fp_open(struct inode *inode, struct file *filp) {
     } else {
         pr_info("No device for minor %d\n", iminor(inode));
     }
-    status = init_fingerprint_msg();
-    if (status) {
-        goto err_msg;
-    }
-    pr_info("fingerprint open success\n");
     mutex_unlock(&device_list_lock);
+    pr_info("fingerprint open success\n");
 
     return status;
-err_msg:
-    pr_info("fifomsg fail\n");
-    deinit_fingerprint_msg();
 err_irq:
     fp_cleanup_device(fp_dev);
     fp_exception_report_drv(FP_SCENE_DRV_OPEN_FAIL);
@@ -550,7 +544,6 @@ err_parse_dt:
     mutex_unlock(&device_list_lock);
     pr_info("fingerprint open fail\n");
 err_panel:
-    pr_info("panel_register fail\n");
     return status;
 }
 
@@ -565,22 +558,19 @@ static int fp_release(struct inode *inode, struct file *filp) {
     /*last close?? */
     fp_dev->users--;
     if (!fp_dev->users) {
-        gpio_set_value(fp_dev->reset_gpio, 0);
-        mdelay(3);
         fp_power_off(fp_dev);
         fp_dev->device_available = 0;
         irq_cleanup(fp_dev);
         fp_cleanup_device(fp_dev);
         /*power off the sensor*/
     }
-    deinit_fingerprint_msg();
     mutex_unlock(&device_list_lock);
     return status;
 }
 
 ssize_t fp_read(struct file * f, char __user *buf, size_t count, loff_t *offset)
 {
-    struct fingerprint_message_t rcv_msg = {0};
+    struct fingerprint_message_t *rcv_msg = NULL;
     pr_info("gf_read enter");
     if (buf == NULL || f == NULL || count != sizeof(struct fingerprint_message_t)) {
         return 0;
@@ -589,7 +579,10 @@ ssize_t fp_read(struct file * f, char __user *buf, size_t count, loff_t *offset)
     if (wait_fp_event(NULL, 0, &rcv_msg)) {
         return -2;
     }
-    if (copy_to_user(buf, &rcv_msg, count)) {
+    if (rcv_msg == NULL) {
+        return -3;
+    }
+    if (copy_to_user(buf, rcv_msg, count)) {
         return -EFAULT;
     }
     pr_info("end wait for driver event");
