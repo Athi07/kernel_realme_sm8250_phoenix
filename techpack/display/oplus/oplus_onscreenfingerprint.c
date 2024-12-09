@@ -28,14 +28,12 @@ bool oplus_skip_pcc = false;
 bool apollo_backlight_enable = false;
 struct drm_msm_pcc oplus_save_pcc;
 int oplus_dimlayer_hbm = 0;
-int oplus_dimlayer_hbm_saved = 0;
 int oplus_aod_dim_alpha = CUST_A_NO;
 
 extern int oplus_underbrightness_alpha;
 extern int oplus_dimlayer_dither_threshold;
 extern int oplus_panel_alpha;
 extern int hbm_mode;
-extern int oplus_skip_pcc_override;
 extern bool oplus_ffl_trigger_finish;
 extern int dynamic_osc_clock;
 extern ktime_t oplus_onscreenfp_pressed_time;
@@ -459,7 +457,7 @@ int dsi_panel_parse_oplus_config(struct dsi_panel *panel)
 		"oplus,dfps-idle-off");
 	DSI_INFO("oplus,dfps-idle-off: %s", panel->oplus_priv.dfps_idle_off ? "true" : "false");
 
-	if (!strcmp(panel->oplus_priv.vendor_name, "ANA6706") || !strcmp(panel->oplus_priv.vendor_name, "SOFE03F")) {
+	if (!strcmp(panel->oplus_priv.vendor_name, "ANA6706")) {
 		oplus_enhance_mipi_strength = true;
 	} else {
 		oplus_enhance_mipi_strength = false;
@@ -750,8 +748,9 @@ int sde_crtc_config_fingerprint_dim_layer(struct drm_crtc_state *crtc_state, int
 
 bool is_skip_pcc(struct drm_crtc *crtc)
 {
-	if (sde_crtc_get_fingerprint_pressed(crtc->state)
-		&& oplus_skip_pcc_override == 0)
+	if (OPLUS_DISPLAY_POWER_DOZE_SUSPEND == get_oplus_display_power_status() ||
+	    OPLUS_DISPLAY_POWER_DOZE == get_oplus_display_power_status() ||
+	    sde_crtc_get_fingerprint_mode(crtc->state))
 		return true;
 
 	return false;
@@ -885,7 +884,7 @@ int oplus_display_panel_get_dimlayer_hbm(void *data)
 {
 	uint32_t *dimlayer_hbm = data;
 
-	(*dimlayer_hbm) = oplus_dimlayer_hbm_saved;
+	(*dimlayer_hbm) = oplus_dimlayer_hbm;
 
 	return 0;
 }
@@ -899,42 +898,27 @@ int oplus_display_panel_set_dimlayer_hbm(void *data)
 	int value = (*dimlayer_hbm);
 
 	value = !!value;
-	if (oplus_dimlayer_hbm_saved == value)
+	if (oplus_dimlayer_hbm == value)
 		return 0;
-	if (get_oplus_display_power_status() == OPLUS_DISPLAY_POWER_ON) {
-		if (!dsi_connector || !dsi_connector->state || !dsi_connector->state->crtc) {
-			pr_err("[%s]: display not ready\n", __func__);
+	if (!dsi_connector || !dsi_connector->state || !dsi_connector->state->crtc) {
+		pr_err("[%s]: display not ready\n", __func__);
+	} else {
+		err = drm_crtc_vblank_get(dsi_connector->state->crtc);
+		if (err) {
+			pr_err("failed to get crtc vblank, error=%d\n", err);
 		} else {
-			err = drm_crtc_vblank_get(dsi_connector->state->crtc);
-			if (err) {
-				pr_err("failed to get crtc vblank, error=%d\n", err);
-			} else {
-				/* do vblank put after 5 frames */
-				oplus_dimlayer_hbm_vblank_count = 5;
-				atomic_inc(&oplus_dimlayer_hbm_vblank_ref);
-			}
+			/* do vblank put after 5 frames */
+			oplus_dimlayer_hbm_vblank_count = 5;
+			atomic_inc(&oplus_dimlayer_hbm_vblank_ref);
 		}
-		oplus_dimlayer_hbm = value;
 	}
-	oplus_dimlayer_hbm_saved = value;
+	oplus_dimlayer_hbm = value;
 
 #ifdef OPLUS_BUG_STABILITY
-        pr_err("debug for oplus_display_set_dimlayer_hbm set oplus_dimlayer_hbm = %d, oplus_dimlayer_hbm_saved = %d\n",
-		oplus_dimlayer_hbm, oplus_dimlayer_hbm_saved);
+	pr_err("debug for oplus_display_set_dimlayer_hbm set oplus_dimlayer_hbm = %d\n", oplus_dimlayer_hbm);
 #endif
 
 	return 0;
-}
-
-void oplus_dimlayer_vblank(struct drm_crtc *crtc) {
-	int err = drm_crtc_vblank_get(crtc);
-	if (err) {
-		pr_err("failed to get crtc vblank, error=%d\n", err);
-	} else {
-		/* do vblank put after 5 frames */
-		oplus_dimlayer_hbm_vblank_count = 5;
-		atomic_inc(&oplus_dimlayer_hbm_vblank_ref);
-	}
 }
 
 int oplus_display_panel_notify_fp_press(void *data)
