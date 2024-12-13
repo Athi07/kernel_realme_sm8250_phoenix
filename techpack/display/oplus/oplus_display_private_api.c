@@ -76,8 +76,6 @@ bool oplus_skip_datadimming_sync = false;
 
 int oplus_skip_pcc_override = 0;
 
-uint64_t serial_number_fir = 0x0;
-
 extern int oplus_debug_max_brightness;
 int oplus_seed_backlight = 0;
 bool oplus_dc_v2_on = false;
@@ -651,17 +649,6 @@ struct device_attribute *attr, char *buf) {
 	}
 
 	/*
-	 * To fix bug id 5552142, we do not read serial number frequently.
-	 * First read, then return the saved value.
-	 */
-	if (serial_number_fir != 0) {
-		ret = scnprintf(buf, PAGE_SIZE, "Get panel0 serial number: %llx\n",
-						serial_number_fir);
-		pr_info("%s read serial_number_fir 0x%x\n", __func__, serial_number_fir);
-		return ret;
-	}
-
-	/*
 	 * for some unknown reason, the panel_serial_info may read dummy,
 	 * retry when found panel_serial_info is abnormal.
 	 */
@@ -751,8 +738,6 @@ struct device_attribute *attr, char *buf) {
 		}
 
 		ret = scnprintf(buf, PAGE_SIZE, "Get panel serial number: %llx\n",serial_number);
-		/*Save serial_number value.*/
-		serial_number_fir = serial_number;
 		break;
 	}
 
@@ -1434,7 +1419,18 @@ static ssize_t oplus_display_set_debug(struct device *dev,
 static ssize_t oplus_display_get_dimlayer_enable(struct device *dev,
                                 struct device_attribute *attr, char *buf)
 {
-	return sprintf(buf, "%d %d\n", oplus_dimlayer_bl_enable,oplus_dimlayer_bl_enable_v2);
+	struct dsi_display *display = get_main_display();
+	int res = 0;
+
+	if (!strcmp(display->panel->oplus_priv.vendor_name, "samsung_AMS678UW01")
+		|| !strcmp(display->panel->oplus_priv.vendor_name, "SOFE03F")
+		|| !strcmp(display->panel->oplus_priv.vendor_name, "AMS662ZS01")) {
+		res = oplus_dimlayer_bl_enable_v2;
+	} else {
+		res = oplus_dimlayer_bl_enable;
+	}
+
+	return sprintf(buf, "%d\n", res);
 }
 
 
@@ -2445,16 +2441,13 @@ int dsi_display_oplus_set_power(struct drm_connector *connector,
 			oplus_dsi_update_spr_mode();
 		}
 		set_oplus_display_power_status(OPLUS_DISPLAY_POWER_ON);
-		/*  A tablet Pad, add for NT36523 resume touch here */
-		if(strcmp(display->panel->name, "nt36523 lcd vid mode dsi panel"))
-			msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notifier_data);
-
 		if (oplus_dimlayer_hbm != oplus_dimlayer_hbm_saved) {
 			oplus_dimlayer_hbm = oplus_dimlayer_hbm_saved;
 			oplus_dimlayer_vblank(connector->state->crtc);
 		}
-		msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK,
-					    &notifier_data);
+		/*  A tablet Pad, add for NT36523 resume touch here */
+		if(strcmp(display->panel->name, "nt36523 lcd vid mode dsi panel"))
+			msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &notifier_data);
 		break;
 	case SDE_MODE_DPMS_OFF:
 	default:
@@ -3871,4 +3864,4 @@ static void __exit oplus_display_private_api_exit(void)
 module_init(oplus_display_private_api_init);
 module_exit(oplus_display_private_api_exit);
 MODULE_LICENSE("GPL v2");
-MODULE_AUTHOR("Hujie");
+MODULE_AUTHOR("Hujie <hujie@oplus.com>");

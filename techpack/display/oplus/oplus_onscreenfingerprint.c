@@ -459,7 +459,7 @@ int dsi_panel_parse_oplus_config(struct dsi_panel *panel)
 		"oplus,dfps-idle-off");
 	DSI_INFO("oplus,dfps-idle-off: %s", panel->oplus_priv.dfps_idle_off ? "true" : "false");
 
-	if (!strcmp(panel->oplus_priv.vendor_name, "ANA6706") || !strcmp(panel->oplus_priv.vendor_name, "SOFE03F")) {
+	if (!strcmp(panel->oplus_priv.vendor_name, "ANA6706")) {
 		oplus_enhance_mipi_strength = true;
 	} else {
 		oplus_enhance_mipi_strength = false;
@@ -919,7 +919,7 @@ int oplus_display_panel_set_dimlayer_hbm(void *data)
 	oplus_dimlayer_hbm_saved = value;
 
 #ifdef OPLUS_BUG_STABILITY
-        pr_err("debug for oplus_display_set_dimlayer_hbm set oplus_dimlayer_hbm = %d, oplus_dimlayer_hbm_saved = %d\n",
+	pr_err("debug for oplus_display_set_dimlayer_hbm set oplus_dimlayer_hbm = %d, oplus_dimlayer_hbm_saved = %d\n",
 		oplus_dimlayer_hbm, oplus_dimlayer_hbm_saved);
 #endif
 
