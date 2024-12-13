@@ -29,6 +29,3 @@ endif
 endif
 
 endif
-
-obj-$(CONFIG_OPLUS_CHG_TEST_KIT) += test-kit/
-obj-$(CONFIG_OPLUS_DYNAMIC_CONFIG) += config/

@@ -29,7 +29,6 @@
 #include "../../../../../../kernel/msm-5.4/drivers/usb/typec/tcpc/inc/tcpci_typec.h"
 #include "../oplus_charger.h"
 #include "oplus_sy6974b.h"
-#include "oplus_sy6970_reg.h"
 //#undef dev_info
 //#define dev_info dev_err
 
@@ -109,11 +108,6 @@ static const char * const iio_channel_map[] = {
 };
 
 static struct rt_pd_manager_data *g_rpmd = NULL;
-
-void __attribute__((weak)) oplus_set_prswap(bool swap)
-{
-	return;
-}
 
 static int smblib_get_prop(struct rt_pd_manager_data *rpmd,
 			   enum iio_psy_property ipp,
@@ -273,26 +267,12 @@ static inline void start_usb_peripheral(struct rt_pd_manager_data *rpmd)
 
 void oplus_start_usb_peripheral(void)
 {
-	if (g_rpmd == NULL) {
+        if (NULL == g_rpmd) {
 		return;
 	}
 
 	printk(KERN_ERR "%s \n", __func__);
 	start_usb_peripheral(g_rpmd);
-	return;
-}
-
-void oplus_enable_device_mode(bool enable)
-{
-	if (g_rpmd == NULL) {
-		return;
-	}
-
-	printk(KERN_INFO "%s %d\n", __func__ , enable);
-	if(enable)
-		start_usb_peripheral(g_rpmd);
-	else
-		stop_usb_peripheral(g_rpmd);
 	return;
 }
 
@@ -327,7 +307,7 @@ static void usb_dwork_handler(struct work_struct *work)
 		return;
 	}
 
-	dev_dbg(rpmd->dev, "%s %s\n", __func__, dr_names[usb_dr]);
+	dev_info(rpmd->dev, "%s %s\n", __func__, dr_names[usb_dr]);
 
 	switch (usb_dr) {
 	case DR_IDLE:
@@ -337,7 +317,7 @@ static void usb_dwork_handler(struct work_struct *work)
 		break;
 	case DR_DEVICE:
 		ret = smblib_get_prop(rpmd, POWER_SUPPLY_PROP_REAL_TYPE, &val);
-		dev_dbg(rpmd->dev, "%s polling_cnt = %d, ret = %d type = %d\n",
+		dev_info(rpmd->dev, "%s polling_cnt = %d, ret = %d type = %d\n",
 				    __func__, ++rpmd->usb_type_polling_cnt,
 				    ret, val.intval);
 
@@ -641,7 +621,6 @@ static int pd_tcp_notifier_call(struct notifier_block *nb,
 		if (noti->swap_state.new_role == PD_ROLE_SINK) {
 			dev_info(rpmd->dev, "%s swap power role to sink\n",
 					    __func__);
-			oplus_set_prswap(true);
 			/*
 			 * report charger plug-in without charger type detection
 			 * to not interfering with USB2.0 communication

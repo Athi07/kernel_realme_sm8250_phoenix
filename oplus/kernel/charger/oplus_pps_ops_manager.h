@@ -1,6 +1,7 @@
 #ifndef _OPLUS_PPS_OPS_H_
 #define _OPLUS_PPS_OPS_H_
 
+
 #include <linux/of.h>
 #include "oplus_charger.h"
 #include "oplus_pps.h"

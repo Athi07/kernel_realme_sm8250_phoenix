@@ -307,6 +307,7 @@ static int bq2560x_write_byte(struct bq2560x *bq, u8 reg, u8 data)
 	if (ret) {
 		pr_err("Failed: reg=%02X, ret=%d\n", reg, ret);
 	}
+
 	return ret;
 }
 
@@ -1496,7 +1497,7 @@ static void register_charger_devinfo(struct bq2560x* bq)
 		ret = register_device_proc("secondary_charger",version,manufacture);
 	}
 	if (ret) {
-          pr_err("register_charger_devinfo failed\n");
+		pr_err("register_charger_devinfo failed\n");
         }
 #endif
 }
@@ -1994,8 +1995,6 @@ static irqreturn_t bq2560x_irq_handler(int irq, void *data)
 	pr_notice("bq2560x_irq_handler:(%d,%d)\n",prev_pg,bq->power_good);
 	oplus_bq2560x_dump_registers();
 
-	oplus_chg_track_check_wired_charging_break(bq->power_good);
-
 	if (oplus_vooc_get_fastchg_started() == true) {
 		chg_err("oplus_vooc_get_fastchg_started = true!(%d %d)\n", prev_pg, bq->power_good);
 		return IRQ_HANDLED;
@@ -2475,10 +2474,9 @@ int oplus_bq2560x_set_input_current_limit(int current_ma)
 	get_monotonic_boottime(&g_bq->ptime[1]);
 	diff = timespec_sub(g_bq->ptime[1], g_bq->ptime[0]);
 	g_bq->aicr = cur_ma;
-	if (cur_ma && diff.tv_sec < 1) {
-		ms = (1 - diff.tv_sec)*1000;
+	if (cur_ma && diff.tv_sec < 3) {
+		ms = (3 - diff.tv_sec)*1000;
 		cancel_delayed_work(&g_bq->bq2560x_aicr_setting_work);
-		//ms = 1000;
 		pr_info("delayed work %d ms", ms);
 		schedule_delayed_work(&g_bq->bq2560x_aicr_setting_work, msecs_to_jiffies(ms));
 	} else {
