@@ -98,6 +98,6 @@ cd tmp
 7za a -mx9 tmp.zip *
 cd ..
 rm *.zip
-cp -fp tmp/tmp.zip RealKing-OPKona-$TIME.zip
+cp -fp tmp/tmp.zip Phoenix-OPKona-$TIME.zip
 rm -rf tmp
 echo $TIME
