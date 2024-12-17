@@ -34,12 +34,7 @@ static inline void atomic_##op(int i, atomic_t *v)			\
 									\
 	asm volatile(							\
 	__LSE_PREAMBLE							\
-	ARM64_LSE_ATOMIC_INSN(				\
-	/* LL/SC */							\
-	__LL_SC_ATOMIC(op)						\
-	__nops(1),							\
-	/* LSE atomics */						\
-"	prfm	pstl1strm, %[v]\n"					\
+	ARM64_LSE_ATOMIC_INSN(__LL_SC_ATOMIC(op),			\
 "	" #asm_op "	%w[i], %[v]\n")					\
 	: [i] "+r" (w0), [v] "+Q" (v->counter)				\
 	: "r" (x1)							\
@@ -260,12 +255,7 @@ static inline void atomic64_##op(long i, atomic64_t *v)			\
 									\
 	asm volatile(							\
 	__LSE_PREAMBLE							\
-	ARM64_LSE_ATOMIC_INSN(				\
-	/* LL/SC */							\
-	__LL_SC_ATOMIC64(op)						\
-	__nops(1),							\
-	/* LSE atomics */						\
-"	prfm	pstl1strm, %[v]\n"					\
+	ARM64_LSE_ATOMIC_INSN(__LL_SC_ATOMIC64(op),			\
 "	" #asm_op "	%[i], %[v]\n")					\
 	: [i] "+r" (x0), [v] "+Q" (v->counter)				\
 	: "r" (x1)							\
