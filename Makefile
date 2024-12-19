@@ -900,10 +900,6 @@ else
 KBUILD_AFLAGS	+= -Wa,-gdwarf-2
 endif
 endif
-<<<<<<< HEAD
-=======
-
->>>>>>> v4.19.164
 ifdef CONFIG_DEBUG_INFO_DWARF4
 KBUILD_CFLAGS	+= $(call cc-option, -gdwarf-4,)
 endif
