@@ -88,6 +88,7 @@
 
 #if defined(OPLUS_FEATURE_MULTI_FREEAREA) && defined(CONFIG_PHYSICAL_ANTI_FRAGMENTATION)
 #include "multi_freearea.h"
+#endif
 
 atomic_long_t kswapd_waiters = ATOMIC_LONG_INIT(0);
 
