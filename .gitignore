@@ -137,3 +137,5 @@ all.config
 kernel/configs/android-*.cfg
 
 /tc
+out/
+build.log
