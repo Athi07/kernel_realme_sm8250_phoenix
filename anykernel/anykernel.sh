@@ -4,7 +4,7 @@
 ### AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Dragon 7 CLO AOSP/RUI
+kernel.string=Phoenix AOSP/RUI
 do.devicecheck=0
 do.modules=0
 do.systemless=1
