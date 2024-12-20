@@ -8099,6 +8099,15 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu,
 		}
 
 		goto unlock;
+
+		if (schedtune_prefer_high_cap(p))
+                        /*
+                         * Now let the search in
+                         * select_task_rq_fair continue.
+                         */
+                        goto fail;
+                else
+                        goto unlock;
 	}
 
 	/* If there is only one sensible candidate, select it now. */
@@ -12273,7 +12282,7 @@ static void rq_offline_fair(struct rq *rq)
 	unthrottle_offline_cfs_rqs(rq);
 }
 
-//#endif /* CONFIG_SMP */
+#endif /* CONFIG_SMP */
 
 /*
  * scheduler tick hitting a task of our scheduling class.
