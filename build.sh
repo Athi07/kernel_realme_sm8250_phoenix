@@ -8,12 +8,12 @@ KERNEL_DEFCONFIG=vendor/sm8250_defconfig
 DIR=$PWD
 export ARCH=arm64
 export SUBARCH=arm64
-export CLANG_PATH="/$HOME/clang/bin"
+export CLANG_PATH="$HOME/clang/bin"
 export PATH="$CLANG_PATH:$PATH"
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export KBUILD_BUILD_USER=From
-export KBUILD_BUILD_HOST=Lyinx
+export KBUILD_BUILD_HOST=Athi
 
 echo
 echo "Kernel is going to be built using $KERNEL_DEFCONFIG"
