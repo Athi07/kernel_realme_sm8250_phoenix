@@ -1374,22 +1374,22 @@
 				type = "passive";
 			};
 			skin_cpu_moderate_pre_lvl2: skin-cpu-moderate-pre-lv2 {
-				temperature = <47000>;
+				temperature = <46000>;
 				hysteresis = <2000>;
 				type = "passive";
 			};
 			skin_cpu_moderate: skin-cpu-moderate {
-				temperature = <49000>;
+				temperature = <48000>;
 				hysteresis = <2000>;
 				type = "passive";
 			};
 			skin_cpu_severe: skin-cpu-severe {
-				temperature = <51000>;
+				temperature = <52000>;
 				hysteresis = <2000>;
 				type = "passive";
 			};
 			skin_severe: skin-severe {
-				temperature = <53000>;
+				temperature = <54000>;
 				hysteresis = <2000>;
 				type = "hot";
 			};
@@ -1410,7 +1410,7 @@
 			cpu7-turbo {
 				trip = <&skin_cpu_light>;
 				cooling-device =
-					<&CPU7 0 2>;
+					<&CPU7 0 1>;
 			};
 
 			/* moderate pre level 1 throttling */
@@ -1429,7 +1429,7 @@
 			cpu7-nominal-l1 {
 				trip = <&skin_cpu_moderate_pre_lv1>;
 				cooling-device =
-					<&CPU7 3 4>;
+					<&CPU7 2 3>;
 			};
 
 			npu-nominal-l1 {
@@ -1494,27 +1494,27 @@ board_temp-usr {
 	};
 
 	4g_pa_therm-usr {
-		polling-delay-passive = <1000>;
-		polling-delay = <0>;
+		polling-delay-passive = <5000>;
+		polling-delay = <2000>;
 		thermal-governor = "step_wise";
 		thermal-sensors = <&pm8150b_adc_tm ADC_AMUX_THM1_PU2>;
 		wake-capable-sensor;
 		trips {
 			modem_trip_pa2_0: modem_trip_pa2_0 {
-				temperature = <42000>;
-				hysteresis = <4000>;
+				temperature = <44000>;
+				hysteresis = <10000>;
 				type = "passive";
 			};
 
 			modem_trip_pa2_1: modem_trip_pa2_1 {
-				temperature = <48000>;
-				hysteresis = <4000>;
+				temperature = <46000>;
+				hysteresis = <10000>;
 				type = "passive";
 			};
 
 			modem_trip_pa2_2: modem_trip_pa2_2 {
-				temperature = <60000>;
-				hysteresis = <4000>;
+				temperature = <48000>;
+				hysteresis = <10000>;
 				type = "hot";
 			};
 		};
@@ -1569,27 +1569,27 @@ board_temp-usr {
 
 
 	4g-5g-pa-therm-usr {
-		polling-delay-passive = <1000>;
-		polling-delay = <0>;
+		polling-delay-passive = <5000>;
+		polling-delay = <2000>;
 		thermal-governor = "step_wise";
 		thermal-sensors = <&pm8150l_adc_tm ADC_AMUX_THM1_PU2>;
 		wake-capable-sensor;
 		trips {
 			modem_trip0: modem-trip0 {
-				temperature = <42000>;
-				hysteresis = <4000>;
+				temperature = <44000>;
+				hysteresis = <10000>;
 				type = "passive";
 			};
 
 			modem_trip1: modem-trip1 {
-				temperature = <48000>;
-				hysteresis = <4000>;
+				temperature = <45000>;
+				hysteresis = <10000>;
 				type = "passive";
 			};
 
 			modem_trip2: modem-trip2 {
-				temperature = <60000>;
-				hysteresis = <4000>;
+				temperature = <48000>;
+				hysteresis = <10000>;
 				type = "hot";
 			};
 		};
@@ -1693,6 +1693,13 @@ board_temp-usr {
 		};
 	};
 
+	gpuss-1-usr {
+		status = "disabled";
+	};
+};
+
+&msm_gpu {
+	tzone-names = "gpuss-0-usr";
 };
 
 &sdhc_2 {
@@ -1920,7 +1927,7 @@ board_temp-usr {
 		qcom,vooc_multistep_adjust_current_support;
 		qcom,vooc_multistep_initial_batt_temp = <1000>;
 		qcom,vooc_strategy_normal_current = <0x0C>;
-		qcom,vooc_batt_over_high_temp = <450>;
+		qcom,vooc_batt_over_high_temp = <440>;
 
 		qcom,vooc_strategy1_batt_high_temp0 = <400>;
 		qcom,vooc_strategy1_batt_high_temp1 = <420>;
@@ -2104,8 +2111,8 @@ board_temp-usr {
 			qcom,input_current_led_ma_high = <1800>;
 			qcom,input_current_led_ma_warm = <1800>;
 			qcom,input_current_led_ma_normal = <2000>;
-			qcom,led_warm_bat_decidegc = <350>;
-			qcom,led_high_bat_decidegc = <370>;
+			qcom,led_warm_bat_decidegc = <380>;
+			qcom,led_high_bat_decidegc = <400>;
 
 			qcom,input_current_camera_ma = <1200>;
 
@@ -2117,7 +2124,7 @@ board_temp-usr {
 			qcom,input_current_vooc_ma_warm = <3200>;
 			qcom,vooc_temp_bat_warm_decidegc = <390>;
 			qcom,input_current_vooc_ma_high = <2200>;
-			qcom,vooc_temp_bat_hot_decidegc = <450>;
+			qcom,vooc_temp_bat_hot_decidegc = <440>;
 
 			qcom,charger_current_vooc_ma_normal = <1800>;
 
@@ -2125,7 +2132,7 @@ board_temp-usr {
 			qcom,input_current_calling_ma = <1500>;
 
 			//qcom,input_current_led_ma_overtemp = <900>;
-			qcom,overtemp_bat_decidegc = <390>;
+			qcom,overtemp_bat_decidegc = <430>;
 			qcom,iterm_disabled = <0>;
 			qcom,iterm_ma = <135>;
 			qcom,recharge-mv = <100>;
@@ -2136,7 +2143,7 @@ board_temp-usr {
 
 			qcom,cold_bat_decidegc = <20>;  /*-2C~0C*/
 			qcom,temp_cold_vfloat_mv = <3980>;
-			qcom,temp_cold_fastchg_current_ma = <900>;
+			qcom,temp_cold_fastchg_current_ma = <2000>;
 
 			qcom,little_cold_bat_decidegc = <0>;	/*0C~5C*/
 			qcom,temp_little_cold_vfloat_mv = <4435>;
@@ -2166,8 +2173,8 @@ board_temp-usr {
 			qcom,normal_bat_decidegc = <160>;	/*16C~44C*/
 			qcom,temp_normal_fastchg_current_ma = <2000>;
 			qcom,temp_normal_vfloat_mv = <4435>;
-			qcom,pd_temp_normal_fastchg_current_ma = <3000>;
-			qcom,qc_temp_normal_fastchg_current_ma = <3000>;
+			qcom,pd_temp_normal_fastchg_current_ma = <2000>;
+			qcom,qc_temp_normal_fastchg_current_ma = <2000>;
 
 			qcom,warm_bat_decidegc = <450>;		/*45C~53C*/ /*8pin Bat Vooc project need add 3 degree C*/
 			qcom,temp_warm_vfloat_mv = <4130>;
@@ -2179,7 +2186,7 @@ board_temp-usr {
 			qcom,hot_bat_decidegc = <530>;
 
 			qcom,non_standard_vfloat_mv = <3980>;
-			qcom,non_standard_fastchg_current_ma = <1100>;
+			qcom,non_standard_fastchg_current_ma = <2000>;
 
 			qcom,short_c_bat_cv_mv = <4330>;
 			qcom,short_c_bat_vfloat_mv = <3800>;
@@ -2221,8 +2228,8 @@ board_temp-usr {
 			qcom,normal_vterm_hw_inc = <18>;
 			qcom,non_normal_vterm_hw_inc = <18>;
 
-			qcom,ff1_normal_fastchg_ma = <600>;
-			qcom,ff1_warm_fastchg_ma = <660>;
+			qcom,ff1_normal_fastchg_ma = <1500>;
+			qcom,ff1_warm_fastchg_ma = <1500>;
 			qcom,ffc2_normal_fastchg_ma = <420>;/*12C~35c*/
 			qcom,ffc2_warm_fastchg_ma = <430>;/*35C~40c*/
 
@@ -2230,9 +2237,9 @@ board_temp-usr {
 			qcom,ffc2_temp_warm_decidegc = <390>;
 			qcom,ffc2_temp_high_decidegc = <430>;
 
-			qcom,ff1_exit_step_ma = <50>;
-			qcom,ff1_warm_exit_step_ma = <50>;
-			qcom,ffc2_exit_step_ma = <50>;
+			qcom,ff1_exit_step_ma = <25>;
+			qcom,ff1_warm_exit_step_ma = <25>;
+			qcom,ffc2_exit_step_ma = <25>;
 
 			qcom,ffc_normal_vfloat_sw_limit = <4445>;
 			qcom,ffc2_normal_vfloat_sw_limit = <4440>;
