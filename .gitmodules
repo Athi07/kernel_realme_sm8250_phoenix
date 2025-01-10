@@ -1,0 +1,4 @@
+[submodule "tc"]
+	path = tc
+	url = https://gitlab.com/yograjfire18/clang
+	branch = next
