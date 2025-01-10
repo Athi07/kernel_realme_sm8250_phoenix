@@ -39,9 +39,9 @@
 #ifdef OPLUS_FEATURE_CHG_BASIC
 #include <linux/rtc.h>
 #include "../../oplus/oplus_gauge.h"
-#include <soc/oplus/device_info.h>
-#include <soc/oplus/oplus_project.h>
-//#include <soc/oplus/boot_mode.h>
+#include <soc/oppo/device_info.h>
+#include <soc/oppo/oppo_project.h>
+//#include <soc/oppo/boot_mode.h>
 #include "../../oplus/oplus_charger.h"
 #endif
 
