@@ -1105,12 +1105,12 @@
 		};
 
 		cooling-maps {
-			cpu16_cdev {
 			cpufreq_cdev {
 				trip = <&cpufreq_16_config>;
 				cooling-device = <&cpu7_notify 1 1>;
 			};
 
+			cpu16_cdev {
 				trip = <&cpu16_config>;
 				cooling-device = <&cpu6_isolate 1 1>;
 			};
