@@ -142,7 +142,6 @@ Android.bp
 scripts/**/Android.bp
 scripts/Android.bp
 
-tc
 out
 anykernel
 *.log
